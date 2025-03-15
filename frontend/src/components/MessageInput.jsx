@@ -10,45 +10,54 @@ const MessageInput = () => {
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
 
-  // const handleImageChange = (e) => {
-  //   const file = e.target.files[0];
-  //   if (!file.type.startsWith("image/")) {
-  //     toast.error("Please select an image file");
-  //     return;
-  //   }
-
-  //   const reader = new FileReader();
-  //   reader.onloadend = () => {
-  //     setImagePreview(reader.result);
-  //   };
-  //   reader.readAsDataURL(file);
-  // };
-
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+    
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
+
+      // Check original file size
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image too large. Please select an image smaller than 2MB.");
+        return;
+      }
   
     try {
-      // Compress the image
+      toast.loading("Compressing image...");
+      
+      // More aggressive compression options
       const options = {
-        maxSizeMB: 1, // Set to 1MB or lower based on your server limits
-        maxWidthOrHeight: 1024,
-        useWebWorker: true
+        maxSizeMB: 0.5, // Reduced to 500KB
+        maxWidthOrHeight: 250,
+        useWebWorker: true,
+        initialQuality: 0.3, // Lower quality for smaller file size
       };
       
       const compressedFile = await imageCompression(file, options);
+      console.log("Original size:", (file.size / 1024 / 1024).toFixed(2) + "MB");
+      console.log("Compressed size:", (compressedFile.size / 1024 / 1024).toFixed(2) + "MB");
+      
+      // If still too large, show an error
+      if (compressedFile.size > 1 * 1024 * 1024) {
+        toast.dismiss();
+        toast.error("Image is still too large. Please select a smaller image.");
+        return;
+      }
       
       // Create preview from compressed file
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
+        toast.dismiss();
+        toast.success("Image compressed successfully!");
       };
       reader.readAsDataURL(compressedFile);
     } catch (error) {
-      toast.error("Error processing image");
+      toast.dismiss();
+      toast.error("Error compressing image");
       console.error("Image compression failed:", error);
     }
   };
@@ -61,18 +70,25 @@ const MessageInput = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
-
+  
     try {
+      // toast.loading("Sending message...");
+      
       await sendMessage({
         text: text.trim(),
         image: imagePreview,
       });
-
+  
       // Clear form
       setText("");
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      
+      toast.dismiss();
+      // toast.success("Message sent!");
     } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to send message. The image may be too large.");
       console.error("Failed to send message:", error);
     }
   };
