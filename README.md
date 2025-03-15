@@ -1,4 +1,4 @@
-# ✨ Full Stack Realtime Chat App ✨
+# ✨ Full Stack Realtime Chat App Whisper✨
 
 ![Demo App](/frontend/public/Demo.png)
 
