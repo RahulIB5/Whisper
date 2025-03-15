@@ -2,6 +2,8 @@
 
 ![Demo App](/frontend/public/Demo.png)
 
+ ### [Live at 💬](https://whisperrrr.onrender.com/)
+
 Highlights:
 
 - 🌟 Tech stack: MERN + Socket.io + TailwindCSS + Daisy UI
@@ -13,7 +15,6 @@ Highlights:
 - ⭐ At the end Deployment like a pro for FREE!
 - ⏳ And much more!
 
-## [Live at](https://whisperrrr.onrender.com/)
 
 ### Setup .env file
 
