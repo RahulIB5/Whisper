@@ -111,6 +111,8 @@ const Sidebar = () => {
   const [sidebarWidth, setSidebarWidth] = useState(280); // Default width
   const sidebarRef = useRef(null);
   const isDraggingRef = useRef(false);
+  const touchStartXRef = useRef(0);
+  const initialWidthRef = useRef(0);
 
   useEffect(() => {
     getUsers();
@@ -123,7 +125,7 @@ const Sidebar = () => {
     ? users.filter((user) => safeOnlineUsers.includes(user._id))
     : users;
 
-  // Handle resizing sidebar
+  // Handle mouse events for resizing
   const handleMouseDown = (e) => {
     e.preventDefault();
     isDraggingRef.current = true;
@@ -146,6 +148,29 @@ const Sidebar = () => {
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
+  // Handle touch events without using preventDefault
+  const handleTouchStart = (e) => {
+    isDraggingRef.current = true;
+    touchStartXRef.current = e.touches[0].clientX;
+    initialWidthRef.current = sidebarWidth;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDraggingRef.current) return;
+    
+    const touchDelta = e.touches[0].clientX - touchStartXRef.current;
+    const newWidth = initialWidthRef.current + touchDelta;
+    
+    // Set min and max values
+    if (newWidth >= 80 && newWidth <= 500) {
+      setSidebarWidth(newWidth);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDraggingRef.current = false;
+  };
+
   // Determine if we should show text based on sidebar width
   const showText = sidebarWidth > 150;
 
@@ -159,8 +184,11 @@ const Sidebar = () => {
     >
       {/* Resizer handle */}
       <div 
-        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize flex items-center justify-center hover:bg-base-300"
+        className="absolute right-0 top-0 bottom-0 w-8 cursor-ew-resize flex items-center justify-center hover:bg-base-300 z-10"
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <GripHorizontal className="w-4 h-4 text-gray-500" />
       </div>
