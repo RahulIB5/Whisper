@@ -1,24 +1,60 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Camera, Mail, User } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    // Validate image
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
 
-    reader.readAsDataURL(file);
-
-    reader.onload = async () => {
-      const base64Image = reader.result;
-      setSelectedImg(base64Image);
-      await updateProfile({ profilePic: base64Image });
-    };
+    try {
+      setIsCompressing(true);
+      
+      // Compress the image
+      const options = {
+        maxSizeMB: 0.5, // Limit to 500KB
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+        fileType: file.type
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      console.log("Original file size:", file.size / 1024 / 1024, "MB");
+      console.log("Compressed file size:", compressedFile.size / 1024 / 1024, "MB");
+      
+      // Convert compressed file to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(compressedFile);
+      
+      reader.onload = async () => {
+        const base64Image = reader.result;
+        setSelectedImg(base64Image);
+        setIsCompressing(false);
+        
+        try {
+          await updateProfile({ profilePic: base64Image });
+        } catch (error) {
+          toast.error("Failed to update profile picture");
+          console.error("Profile update error:", error);
+        }
+      };
+    } catch (error) {
+      setIsCompressing(false);
+      toast.error("Error processing image");
+      console.error("Image compression failed:", error);
+    }
   };
 
   return (
@@ -46,7 +82,7 @@ const ProfilePage = () => {
                   bg-base-content hover:scale-105
                   p-2 rounded-full cursor-pointer 
                   transition-all duration-200
-                  ${isUpdatingProfile ? "animate-pulse pointer-events-none" : ""}
+                  ${isUpdatingProfile || isCompressing ? "animate-pulse pointer-events-none" : ""}
                 `}
               >
                 <Camera className="w-5 h-5 text-base-200" />
@@ -56,12 +92,14 @@ const ProfilePage = () => {
                   className="hidden"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  disabled={isUpdatingProfile}
+                  disabled={isUpdatingProfile || isCompressing}
                 />
               </label>
             </div>
             <p className="text-sm text-zinc-400">
-              {isUpdatingProfile ? "Uploading..." : "Click the camera icon to update your photo"}
+              {isCompressing ? "Compressing image..." :
+               isUpdatingProfile ? "Uploading..." : 
+               "Click the camera icon to update your photo"}
             </p>
           </div>
 
