@@ -7,7 +7,7 @@ import LoginPage from './pages/LoginPage'
 import SettingsPage from './pages/SettingsPage'
 import ProfilePage from './pages/ProfilePage'
 
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/useAuthStore'
 import { Loader } from "lucide-react";
 import { Toaster } from 'react-hot-toast'
@@ -16,6 +16,7 @@ import { useThemeStore } from './store/useThemeStore'
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers }= useAuthStore();
   const { theme } = useThemeStore();
+  const location = useLocation();
 
   console.log({ onlineUsers });
 
@@ -36,18 +37,21 @@ const App = () => {
     </div>
   );
 
-  return (
-    <div data-theme={theme}>
-      
-      <Navbar />
+  const isHomePage = location.pathname === "/";
 
-      <Routes>
+  return (
+    <div data-theme={theme} className="h-screen flex flex-col">
+      {!isHomePage && <Navbar />}
+
+      <div className="flex-1 overflow-hidden">
+        <Routes>
         <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
         <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-      </Routes>
+        </Routes>
+      </div>
 
       <Toaster />
     </div>
@@ -55,4 +59,3 @@ const App = () => {
 }
 
 export default App
-

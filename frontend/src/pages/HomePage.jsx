@@ -1,24 +1,30 @@
 import { useChatStore } from "../store/useChatStore";
-
 import Sidebar from "../components/Sidebar";
 import NoChatSelected from "../components/NoChatSelected";
 import ChatContainer from "../components/ChatContainer";
+import LeftNav from "../components/LeftNav";
+import { motion } from "framer-motion";
 
 const HomePage = () => {
   const { selectedUser } = useChatStore();
 
   return (
-    <div className="h-screen bg-base-200">
-      <div className="flex items-center justify-center pt-20 px-4">
-        <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)]">
-          <div className="flex h-full rounded-lg overflow-hidden">
-            <Sidebar />
+    <div className="h-screen flex bg-base-100 overflow-hidden">
+      {/* Left Navigation Bar (WhatsApp Style) */}
+      <LeftNav />
 
-            {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
-          </div>
-        </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Contacts Sidebar */}
+        <Sidebar />
+
+        {/* Chat Area */}
+        <main className="flex-1 flex flex-col min-w-0 bg-base-200/50">
+          {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
+        </main>
       </div>
     </div>
   );
 };
+
 export default HomePage;
